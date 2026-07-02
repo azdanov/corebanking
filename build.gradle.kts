@@ -19,11 +19,15 @@ repositories {
 }
 
 val mybatisVersion = "4.0.1"
+val jodaMoneyVersion = "2.0.3"
+
+val mockitoAgent = configurations.create("mockitoAgent")
 
 dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
 
+    implementation("org.joda:joda-money:$jodaMoneyVersion")
     implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:$mybatisVersion")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-amqp")
@@ -32,6 +36,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
 
     runtimeOnly("org.postgresql:postgresql")
+
+    mockitoAgent("org.mockito:mockito-core") { isTransitive = false }
 
     testImplementation("org.mybatis.spring.boot:mybatis-spring-boot-starter-test:$mybatisVersion")
     testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
@@ -49,4 +55,7 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+
+    // https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+    jvmArgs("-javaagent:${mockitoAgent.asPath}")
 }
