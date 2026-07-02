@@ -67,7 +67,7 @@ public class AccountController {
         @PathVariable UUID accountId,
         @Valid @RequestBody CreateTransactionRequest request
     ) {
-        var createTransaction = new CreateTransactionCommand(request.amount(), request.currency(), request.direction(), request.description());
+        var createTransaction = new CreateTransactionCommand(request.amount(), request.currency(), request.direction().name(), request.description());
         var transaction = createTransactionHandler.createTransaction(accountId, createTransaction);
         return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
     }

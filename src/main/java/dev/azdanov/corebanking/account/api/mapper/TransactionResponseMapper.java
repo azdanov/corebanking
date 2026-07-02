@@ -1,5 +1,6 @@
 package dev.azdanov.corebanking.account.api.mapper;
 
+import dev.azdanov.corebanking.account.api.model.TransactionDirection;
 import dev.azdanov.corebanking.account.api.response.TransactionResponse;
 import dev.azdanov.corebanking.account.domain.account.Transaction;
 
@@ -14,7 +15,7 @@ public final class TransactionResponseMapper {
             transaction.id().value(),
             transaction.amount().getAmount(),
             transaction.currency(),
-            transaction.direction().name(),
+            TransactionDirection.valueOf(transaction.direction().name()),
             transaction.description(),
             transaction.balanceAfter().getAmount());
     }
