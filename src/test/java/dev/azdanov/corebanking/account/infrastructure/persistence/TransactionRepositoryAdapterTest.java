@@ -10,7 +10,6 @@ import dev.azdanov.corebanking.account.domain.repository.BalanceRepository;
 import dev.azdanov.corebanking.account.domain.repository.TransactionRepository;
 import dev.azdanov.corebanking.shared.money.MoneyFactory;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +28,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
 @Transactional
-@DisplayName("TransactionRepositoryAdapter - persistence tests")
 class TransactionRepositoryAdapterTest {
 
     private static final Instant FIXED_TIME = Instant.parse("2026-05-07T10:00:00Z");
@@ -65,12 +63,10 @@ class TransactionRepositoryAdapterTest {
     }
 
     @Nested
-    @DisplayName("post - IN direction (deposit)")
-    class PostInTests {
+    class PostingTransactionInDirectionTests {
 
         @Test
-        @DisplayName("should deposit money and update balance")
-        void shouldDepositMoneyAndUpdateBalance() {
+        void shouldDepositMoneyAndUpdateAccountBalance() {
             var depositAmount = MoneyFactory.of("USD", new BigDecimal("1000.00"));
             var transaction = account.post(TransactionDirection.IN, "USD", depositAmount, "Initial deposit", FIXED_TIME);
 
@@ -90,8 +86,7 @@ class TransactionRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName("should accumulate deposits on the same balance")
-        void shouldAccumulateMultipleDeposits() {
+        void shouldAccumulateMultipleDepositsOnSameBalance() {
             seedBalance();
 
             var first = MoneyFactory.of("USD", new BigDecimal("500.00"));
@@ -112,8 +107,7 @@ class TransactionRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName("should deposit in EUR when account has EUR balance")
-        void shouldDepositInEuros() {
+        void shouldDepositInEurosWhenAccountHasEurosBalance() {
             var depositAmount = MoneyFactory.of("EUR", new BigDecimal("200.00"));
             var transaction = account.post(TransactionDirection.IN, "EUR", depositAmount, "Euro deposit", FIXED_TIME);
 
@@ -129,8 +123,7 @@ class TransactionRepositoryAdapterTest {
     }
 
     @Nested
-    @DisplayName("post - OUT direction (withdrawal)")
-    class PostOutTests {
+    class PostingTransactionOutDirectionTests {
 
         @BeforeEach
         void seed() {
@@ -138,8 +131,7 @@ class TransactionRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName("should withdraw money and decrease balance")
-        void shouldWithdrawMoney() {
+        void shouldWithdrawMoneyAndDecreaseBalance() {
             var withdrawalAmount = MoneyFactory.of("USD", new BigDecimal("300.00"));
             var transaction = account.post(TransactionDirection.OUT, "USD", withdrawalAmount, "ATM withdrawal", FIXED_TIME);
 
@@ -156,8 +148,7 @@ class TransactionRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName("should reject withdrawal that exceeds available balance")
-        void shouldRejectInsufficientFunds() {
+        void shouldRejectWithdrawalThatExceedsAvailableBalance() {
             var withdrawalAmount = MoneyFactory.of("USD", new BigDecimal("2000.00"));
 
             assertThatThrownBy(() -> account.post(TransactionDirection.OUT, "USD", withdrawalAmount, "Overdraft attempt", FIXED_TIME))
@@ -169,10 +160,7 @@ class TransactionRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName(
-            "should reject withdrawal of exactly the available balance"
-        )
-        void shouldRejectExactBalanceWithdrawal() {
+        void shouldRejectWithdrawalOfExactlyAvailableBalance() {
             var withdrawalAmount = MoneyFactory.of("USD", new BigDecimal("1000.00"));
 
             assertThatThrownBy(() -> account.post(TransactionDirection.OUT, "USD", withdrawalAmount, "Empty account", FIXED_TIME))
@@ -181,8 +169,7 @@ class TransactionRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName("should not affect other currency balances on withdrawal")
-        void shouldNotAffectOtherCurrencies() {
+        void shouldNotAffectOtherCurrencyBalancesOnWithdrawal() {
             var withdrawalAmount = MoneyFactory.of("USD", new BigDecimal("100.00"));
             var transaction = account.post(TransactionDirection.OUT, "USD", withdrawalAmount, "USD withdrawal", FIXED_TIME);
 
@@ -195,12 +182,10 @@ class TransactionRepositoryAdapterTest {
     }
 
     @Nested
-    @DisplayName("Transaction ordering and history")
-    class TransactionOrderingTests {
+    class TransactionOrderingAndHistoryTests {
 
         @Test
-        @DisplayName("should return transactions ordered by created_at DESC")
-        void shouldReturnTransactionsInReverseChronologicalOrder() {
+        void shouldReturnTransactionsOrderedByCreatedAtDesc() {
             var first = MoneyFactory.of("USD", new BigDecimal("100.00"));
             var t1 = FIXED_TIME;
             var txn1 = account.post(TransactionDirection.IN, "USD", first, "First", t1);

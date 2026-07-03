@@ -9,7 +9,6 @@ import dev.azdanov.corebanking.account.domain.repository.BalanceRepository;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.AccountMapper;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.BalanceMapper;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
 @Transactional
-@DisplayName("BalanceRepositoryAdapter - persistence tests")
 class BalanceRepositoryAdapterTest {
 
     private static final Instant FIXED_TIME = Instant.parse("2026-05-07T10:00:00Z");
@@ -56,12 +54,10 @@ class BalanceRepositoryAdapterTest {
     }
 
     @Nested
-    @DisplayName("createInitialBalances")
-    class CreateInitialBalancesTests {
+    class CreatingInitialBalanceRowsTests {
 
         @Test
-        @DisplayName("should insert balance rows for each requested currency")
-        void shouldInsertBalancesForEachCurrency() {
+        void shouldInsertBalanceRowsForEachRequestedCurrency() {
             var account = createAccount(Set.of());
             accountRepository.save(account);
 
@@ -85,10 +81,7 @@ class BalanceRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName(
-            "should not create duplicate balances when currencies already exist"
-        )
-        void shouldNotCreateDuplicateBalances() {
+        void shouldNotCreateDuplicateBalanceRowsForExistingCurrencies() {
             var account = createAccount(Set.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("USD", "EUR"));
@@ -106,8 +99,7 @@ class BalanceRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName("should create a single balance row for one currency")
-        void shouldCreateSingleBalance() {
+        void shouldCreateSingleBalanceRowForOneCurrency() {
             var account = createAccount(Set.of());
             accountRepository.save(account);
 
@@ -120,8 +112,7 @@ class BalanceRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName("should not insert any rows when no currencies provided")
-        void shouldInsertNothingWhenNoCurrencies() {
+        void shouldNotInsertAnyRowsWhenNoCurrenciesProvided() {
             var account = createAccount(Set.of());
             accountRepository.save(account);
 
@@ -131,12 +122,10 @@ class BalanceRepositoryAdapterTest {
     }
 
     @Nested
-    @DisplayName("BalanceMapper - increment and decrement operations")
-    class BalanceIncrementDecrementTests {
+    class BalanceMapperIncrementAndDecrementOperationsTests {
 
         @Test
-        @DisplayName("should increment balance for a deposit")
-        void shouldIncrementBalance() {
+        void shouldIncrementBalanceForDeposit() {
             var account = createAccount(Set.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("USD"));
@@ -151,30 +140,20 @@ class BalanceRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName("should accumulate multiple deposits on the same balance")
-        void shouldAccumulateDeposits() {
+        void shouldAccumulateMultipleDepositsOnTheSameBalance() {
             var account = createAccount(Set.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("EUR"));
 
-            balanceMapper.incrementBalance(
-                accountId.value(),
-                "EUR",
-                new BigDecimal("100.00")
-            );
-            balanceMapper.incrementBalance(
-                accountId.value(),
-                "EUR",
-                new BigDecimal("250.50")
-            );
+            balanceMapper.incrementBalance(accountId.value(), "EUR", new BigDecimal("100.00"));
+            balanceMapper.incrementBalance(accountId.value(), "EUR", new BigDecimal("250.50"));
 
             var balance = balanceMapper.findAvailableAmount(accountId.value(), "EUR");
             assertThat(balance).isEqualByComparingTo(new BigDecimal("350.50"));
         }
 
         @Test
-        @DisplayName("should decrement balance for a withdrawal")
-        void shouldDecrementBalance() {
+        void shouldDecrementBalanceForWithdrawal() {
             var account = createAccount(Set.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("GBP"));
@@ -188,8 +167,7 @@ class BalanceRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName("should not decrement balance when insufficient funds")
-        void shouldNotDecrementWhenInsufficientFunds() {
+        void shouldNotDecrementBalanceWhenInsufficientFunds() {
             var account = createAccount(Set.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("USD"));
@@ -203,10 +181,7 @@ class BalanceRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName(
-            "should allow exact withdrawal that brings balance to zero"
-        )
-        void shouldAllowExactWithdrawal() {
+        void shouldAllowExactWithdrawalThatBringsBalanceToZero() {
             var account = createAccount(Set.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("USD"));
@@ -220,10 +195,7 @@ class BalanceRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName(
-            "should not affect other currency balances when updating one"
-        )
-        void shouldNotAffectOtherCurrencies() {
+        void shouldNotAffectOtherCurrencyBalancesWhenUpdatingOne() {
             var account = createAccount(Set.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("USD", "EUR"));

@@ -10,7 +10,6 @@ import dev.azdanov.corebanking.account.domain.repository.BalanceRepository;
 import dev.azdanov.corebanking.account.domain.repository.TransactionRepository;
 import dev.azdanov.corebanking.shared.money.MoneyFactory;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +28,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
 @Transactional
-@DisplayName("AccountRepositoryAdapter - persistence tests")
 class AccountRepositoryAdapterTest {
 
     private static final Instant FIXED_TIME = Instant.parse("2026-05-07T10:00:00Z");
@@ -57,12 +55,10 @@ class AccountRepositoryAdapterTest {
     }
 
     @Nested
-    @DisplayName("save")
-    class SaveTests {
+    class SavingAccountTests {
 
         @Test
-        @DisplayName("should persist an account to the database")
-        void shouldPersistAccount() {
+        void shouldPersistAccountToDatabase() {
             var found = accountRepository.findByIdWithBalances(accountId);
 
             assertThat(found).isNotNull();
@@ -74,12 +70,10 @@ class AccountRepositoryAdapterTest {
     }
 
     @Nested
-    @DisplayName("findByIdWithBalances")
-    class FindByIdWithBalancesTests {
+    class FindingAccountByIdWithBalancesTests {
 
         @Test
-        @DisplayName("should load account with all balances at zero")
-        void shouldLoadAccountWithBalances() {
+        void shouldLoadAccountWithAllBalancesAtZero() {
             var found = accountRepository.findByIdWithBalances(accountId);
 
             assertThat(found).isNotNull();
@@ -93,10 +87,7 @@ class AccountRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName(
-            "should return updated balances after transactions are persisted"
-        )
-        void shouldReflectTransactionChanges() {
+        void shouldReflectUpdatedBalancesAfterTransactionsArePersisted() {
             var deposit = MoneyFactory.of("USD", new BigDecimal("500.00"));
             var depositTxn = account.post(TransactionDirection.IN, "USD", deposit, "Deposit", FIXED_TIME);
             transactionRepository.post(depositTxn);
@@ -112,8 +103,7 @@ class AccountRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName("should throw when account does not exist")
-        void shouldThrowWhenAccountNotFound() {
+        void shouldThrowExceptionWhenAccountDoesNotExist() {
             var missingAccountId = AccountId.create();
 
             assertThatThrownBy(() -> accountRepository.findByIdWithBalances(missingAccountId))
@@ -122,10 +112,7 @@ class AccountRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName(
-            "should return account with empty balances when none seeded"
-        )
-        void shouldReturnAccountWithoutInitialBalances() {
+        void shouldReturnAccountWithEmptyBalancesWhenNoneSeeded() {
             var orphanId = AccountId.create();
             var orphanCustomer = CustomerId.create();
             var orphan = new Account(orphanId, orphanCustomer, "GB", Set.of(), FIXED_TIME);
@@ -139,14 +126,10 @@ class AccountRepositoryAdapterTest {
     }
 
     @Nested
-    @DisplayName("findTransactions")
-    class FindTransactionsTests {
+    class FindingTransactionsTests {
 
         @Test
-        @DisplayName(
-            "should return transactions for a given account ordered by created_at DESC"
-        )
-        void shouldReturnTransactions() {
+        void shouldReturnTransactionsOrderedByCreatedAtDesc() {
             var first = MoneyFactory.of("USD", new BigDecimal("100.00"));
             var t1 = FIXED_TIME;
             var txn1 = account.post(TransactionDirection.IN, "USD", first, "First", t1);
@@ -165,9 +148,6 @@ class AccountRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName(
-            "should return empty list for account with no transactions"
-        )
         void shouldReturnEmptyListForAccountWithNoTransactions() {
             var transactions = accountRepository.findTransactions(accountId);
 
@@ -175,8 +155,7 @@ class AccountRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName("should return correct transaction details")
-        void shouldReturnCorrectTransactionDetails() {
+        void shouldReturnCorrectTransactionDetailsAfterPersistence() {
             var deposit = MoneyFactory.of("USD", new BigDecimal("1000.00"));
             var txn = account.post(TransactionDirection.IN, "USD", deposit, "Test description", FIXED_TIME);
             transactionRepository.post(txn);
