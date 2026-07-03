@@ -29,7 +29,7 @@ public class OpenAccountHandler {
 
     @Transactional
     public AccountResponse createAccount(CreateAccountCommand command) {
-        var accountId = AccountId.generate();
+        var accountId = AccountId.create();
         var customerId = new CustomerId(command.customerId());
         var account = new Account(accountId, customerId, command.country(), Set.copyOf(command.currencies()), Instant.now());
 

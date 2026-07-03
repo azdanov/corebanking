@@ -14,6 +14,7 @@ import dev.azdanov.corebanking.account.application.query.GetAccountQuery;
 import dev.azdanov.corebanking.account.application.query.GetTransactionsQuery;
 import dev.azdanov.corebanking.account.application.queryhandler.GetAccountHandler;
 import dev.azdanov.corebanking.account.application.queryhandler.GetTransactionsHandler;
+import dev.azdanov.corebanking.shared.UuidFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -79,9 +80,9 @@ class AccountControllerTest {
         @Test
         @DisplayName("should create account with valid request and return 201 Created")
         void shouldCreateAccount() throws Exception {
-            var accountId = UUID.randomUUID();
-            var customerId = UUID.randomUUID();
-            var balances = List.of(new BalanceResponse[]{new BalanceResponse("USD", BigDecimal.ZERO)});
+            var accountId = UuidFactory.generate();
+            var customerId = UuidFactory.generate();
+            var balances = List.of(new BalanceResponse[]{new BalanceResponse("USD", BigDecimal.ZERO),});
             var expected = new AccountResponse(accountId, customerId, "US", balances);
 
             given(openAccountHandler.createAccount(any(CreateAccountCommand.class))).willReturn(expected);
@@ -126,10 +127,10 @@ class AccountControllerTest {
         static Stream<Arguments> invalidRequests() {
             return Stream.of(
                 Arguments.of(new CreateAccountRequest(null, "US", List.of("USD"))),
-                Arguments.of(new CreateAccountRequest(UUID.randomUUID(), "", List.of("USD"))),
-                Arguments.of(new CreateAccountRequest(UUID.randomUUID(), "US", List.of())),
-                Arguments.of(new CreateAccountRequest(UUID.randomUUID(), null, List.of("USD"))),
-                Arguments.of(new CreateAccountRequest(UUID.randomUUID(), "US", null))
+                Arguments.of(new CreateAccountRequest(UuidFactory.generate(), "", List.of("USD"))),
+                Arguments.of(new CreateAccountRequest(UuidFactory.generate(), "US", List.of())),
+                Arguments.of(new CreateAccountRequest(UuidFactory.generate(), null, List.of("USD"))),
+                Arguments.of(new CreateAccountRequest(UuidFactory.generate(), "US", null))
             );
         }
     }
@@ -141,9 +142,9 @@ class AccountControllerTest {
         @Test
         @DisplayName("should return account with valid accountId")
         void shouldReturnAccount() throws Exception {
-            var accountId = UUID.randomUUID();
-            var customerId = UUID.randomUUID();
-            var balances = List.of(new BalanceResponse[]{new BalanceResponse("GBP", new BigDecimal("1000.00"))});
+            var accountId = UuidFactory.generate();
+            var customerId = UuidFactory.generate();
+            var balances = List.of(new BalanceResponse[]{new BalanceResponse("GBP", new BigDecimal("1000.00")),});
             var expected = new AccountResponse(accountId, customerId, "UK", balances);
 
             given(getAccountHandler.handle(any(GetAccountQuery.class))).willReturn(expected);
@@ -163,9 +164,12 @@ class AccountControllerTest {
         @Test
         @DisplayName("should return account with multiple balances")
         void shouldReturnAccountWithMultipleBalances() throws Exception {
-            var accountId = UUID.randomUUID();
-            var customerId = UUID.randomUUID();
-            var balances = List.of(new BalanceResponse[]{new BalanceResponse("USD", new BigDecimal("1000.00")), new BalanceResponse("EUR", new BigDecimal("500.00"))});
+            var accountId = UuidFactory.generate();
+            var customerId = UuidFactory.generate();
+            var balances = List.of(new BalanceResponse[]{
+                new BalanceResponse("USD", new BigDecimal("1000.00")),
+                new BalanceResponse("EUR", new BigDecimal("500.00")),
+            });
             var expected = new AccountResponse(accountId, customerId, "US", balances);
 
             given(getAccountHandler.handle(any(GetAccountQuery.class))).willReturn(expected);
@@ -189,14 +193,20 @@ class AccountControllerTest {
         @Test
         @DisplayName("should create transaction with valid request and return 201 Created")
         void shouldCreateTransaction() throws Exception {
-            var accountId = UUID.randomUUID();
-            var transactionId = UUID.randomUUID();
+            var accountId = UuidFactory.generate();
+            var transactionId = UuidFactory.generate();
             var amount = new BigDecimal("250.00");
             var expectedResponse = new TransactionResponse(
-                accountId, transactionId, amount, "EUR", TransactionDirection.OUT, "Test payment", new BigDecimal("9750.00"));
+                accountId,
+                transactionId,
+                amount,
+                "EUR",
+                TransactionDirection.OUT,
+                "Test payment",
+                new BigDecimal("9750.00")
+            );
 
-            given(createTransactionHandler.createTransaction(any(UUID.class), any(CreateTransactionCommand.class)))
-                .willReturn(expectedResponse);
+            given(createTransactionHandler.createTransaction(any(UUID.class), any(CreateTransactionCommand.class))).willReturn(expectedResponse);
 
             var request = new CreateTransactionRequest(amount, "EUR", TransactionDirection.OUT, "Test payment");
 
@@ -224,7 +234,7 @@ class AccountControllerTest {
         @MethodSource("invalidRequests")
         @DisplayName("should return 400 for invalid request")
         void shouldReturn400ForInvalidRequest(CreateTransactionRequest request) throws Exception {
-            postTransaction(UUID.randomUUID(), request).andExpect(status().isBadRequest());
+            postTransaction(UuidFactory.generate(), request).andExpect(status().isBadRequest());
 
             verify(createTransactionHandler, never()).createTransaction(any(), any());
         }
@@ -232,15 +242,14 @@ class AccountControllerTest {
         @Test
         @DisplayName("should return 400 when request body is missing")
         void shouldReturn400WhenRequestBodyMissing() throws Exception {
-            mockMvc.perform(post(TRANSACTIONS_PATH, UUID.randomUUID()).contentType(APPLICATION_JSON))
+            mockMvc.perform(post(TRANSACTIONS_PATH, UuidFactory.generate()).contentType(APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
             verify(createTransactionHandler, never()).createTransaction(any(), any());
         }
 
         static Stream<Arguments> invalidRequests() {
-            return Stream.of(
-                Arguments.of(new CreateTransactionRequest(null, "EUR", TransactionDirection.OUT, "Test")),
+            return Stream.of(Arguments.of(new CreateTransactionRequest(null, "EUR", TransactionDirection.OUT, "Test")),
                 Arguments.of(new CreateTransactionRequest(new BigDecimal("100"), "", TransactionDirection.OUT, "Test")),
                 Arguments.of(new CreateTransactionRequest(new BigDecimal("100"), "EUR", null, "Test")),
                 Arguments.of(new CreateTransactionRequest(new BigDecimal("100"), "EUR", TransactionDirection.OUT, ""))
@@ -255,10 +264,26 @@ class AccountControllerTest {
         @Test
         @DisplayName("should list transactions for an account")
         void shouldListTransactions() throws Exception {
-            var accountId = UUID.randomUUID();
+            var accountId = UuidFactory.generate();
             var expected = List.of(
-                new TransactionResponse(accountId, UUID.randomUUID(), new BigDecimal("100"), "USD", TransactionDirection.IN, "Deposit", new BigDecimal("100")),
-                new TransactionResponse(accountId, UUID.randomUUID(), new BigDecimal("50"), "USD", TransactionDirection.OUT, "Withdrawal", new BigDecimal("50"))
+                new TransactionResponse(
+                    accountId,
+                    UuidFactory.generate(),
+                    new BigDecimal("100"),
+                    "USD",
+                    TransactionDirection.IN,
+                    "Deposit",
+                    new BigDecimal("100")
+                ),
+                new TransactionResponse(
+                    accountId,
+                    UuidFactory.generate(),
+                    new BigDecimal("50"),
+                    "USD",
+                    TransactionDirection.OUT,
+                    "Withdrawal",
+                    new BigDecimal("50")
+                )
             );
 
             given(getTransactionsHandler.handle(any(GetTransactionsQuery.class))).willReturn(expected);
@@ -275,7 +300,7 @@ class AccountControllerTest {
         @Test
         @DisplayName("should return empty list when no transactions exist")
         void shouldReturnEmptyListWhenNoTransactions() throws Exception {
-            var accountId = UUID.randomUUID();
+            var accountId = UuidFactory.generate();
 
             given(getTransactionsHandler.handle(any(GetTransactionsQuery.class))).willReturn(List.of());
 
@@ -304,5 +329,4 @@ class AccountControllerTest {
     private ResultActions getTransactions(UUID accountId) throws Exception {
         return mockMvc.perform(get(TRANSACTIONS_PATH, accountId));
     }
-
 }

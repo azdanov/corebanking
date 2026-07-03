@@ -89,7 +89,7 @@ public class Account {
             };
         current.setAvailableAmount(nextAmount);
         return new Transaction(
-            TransactionId.generate(),
+            TransactionId.create(),
             id,
             amount,
             currency,

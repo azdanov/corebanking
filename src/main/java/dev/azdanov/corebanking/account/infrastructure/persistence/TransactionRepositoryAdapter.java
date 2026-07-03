@@ -8,6 +8,7 @@ import dev.azdanov.corebanking.account.domain.account.TransactionId;
 import dev.azdanov.corebanking.account.domain.repository.TransactionRepository;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.BalanceMapper;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.TransactionMapper;
+import dev.azdanov.corebanking.shared.UuidFactory;
 import dev.azdanov.corebanking.shared.money.MoneyFactory;
 import org.springframework.stereotype.Repository;
 
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 @Repository
 public class TransactionRepositoryAdapter implements TransactionRepository {
+
     private final TransactionMapper transactionMapper;
     private final BalanceMapper balanceMapper;
 
@@ -44,7 +46,7 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
         }
 
         var now = Instant.now();
-        var transactionId = UUID.ofEpochMillis(System.currentTimeMillis());
+        var transactionId = UuidFactory.generate();
 
         transactionMapper.insert(
             transactionId,
@@ -70,5 +72,4 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
             now
         );
     }
-
 }
