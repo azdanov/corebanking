@@ -1,21 +1,15 @@
 package dev.azdanov.corebanking.account.infrastructure.persistence;
 
-import dev.azdanov.corebanking.account.application.command.CreateTransactionCommand;
-import dev.azdanov.corebanking.account.domain.account.AccountId;
 import dev.azdanov.corebanking.account.domain.account.Transaction;
-import dev.azdanov.corebanking.account.domain.account.TransactionDirection;
-import dev.azdanov.corebanking.account.domain.account.TransactionId;
 import dev.azdanov.corebanking.account.domain.repository.TransactionRepository;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.BalanceMapper;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.TransactionMapper;
-import dev.azdanov.corebanking.shared.UuidFactory;
-import dev.azdanov.corebanking.shared.money.MoneyFactory;
 import org.springframework.stereotype.Repository;
-
-import java.time.Instant;
-import java.util.UUID;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
+@Transactional(propagation = Propagation.MANDATORY)
 public class TransactionRepositoryAdapter implements TransactionRepository {
 
     private final TransactionMapper transactionMapper;
@@ -30,46 +24,27 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
     }
 
     @Override
-    public void post(UUID accountId, CreateTransactionCommand command) {
-        var direction = TransactionDirection.valueOf(command.direction());
-        var updatedRows = switch (direction) {
-            case IN -> balanceMapper.incrementBalance(accountId, command.currency(), command.amount());
-            case OUT -> balanceMapper.decrementBalanceIfEnough(accountId, command.currency(), command.amount());
+    public void post(Transaction transaction) {
+        var updatedRows = switch (transaction.direction()) {
+            case IN -> balanceMapper.incrementBalance(
+                transaction.accountId().value(), transaction.currency(), transaction.amount().getAmount());
+            case OUT -> balanceMapper.decrementBalanceIfEnough(
+                transaction.accountId().value(), transaction.currency(), transaction.amount().getAmount());
         };
         if (updatedRows == 0) {
-            throw new IllegalStateException("Balance update rejected for account " + accountId);
+            throw new IllegalStateException("Balance update rejected for account " + transaction.accountId());
         }
-
-        var balanceAfter = balanceMapper.findAvailableAmount(accountId, command.currency());
-        if (balanceAfter == null) {
-            throw new IllegalStateException("Balance missing for account " + accountId + " and currency " + command.currency());
-        }
-
-        var now = Instant.now();
-        var transactionId = UuidFactory.generate();
 
         transactionMapper.insert(
-            transactionId,
-            accountId,
-            command.amount(),
-            command.currency(),
-            direction.name(),
-            command.description(),
-            balanceAfter,
-            now,
-            now
+            transaction.id().value(),
+            transaction.accountId().value(),
+            transaction.amount().getAmount(),
+            transaction.currency(),
+            transaction.direction().name(),
+            transaction.description(),
+            transaction.balanceAfter().getAmount(),
+            transaction.createdAt()
         );
 
-        new Transaction(
-            new TransactionId(transactionId),
-            new AccountId(accountId),
-            MoneyFactory.of(command.currency(), command.amount()),
-            command.currency(),
-            direction,
-            command.description(),
-            MoneyFactory.of(command.currency(), balanceAfter),
-            now,
-            now
-        );
     }
 }

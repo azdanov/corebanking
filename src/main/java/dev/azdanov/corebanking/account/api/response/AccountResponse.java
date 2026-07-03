@@ -6,7 +6,6 @@ import java.util.UUID;
 public record AccountResponse(
     UUID accountId,
     UUID customerId,
-    String country,
     List<BalanceResponse> balances
 ) {
 }

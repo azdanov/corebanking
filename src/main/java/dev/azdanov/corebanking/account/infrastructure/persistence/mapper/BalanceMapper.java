@@ -23,7 +23,10 @@ public interface BalanceMapper {
         "ON CONFLICT (account_id, currency) DO NOTHING",
         "</script>"
     })
-    void insertInitialBalances(@Param("accountId") UUID accountId, @Param("currencies") List<String> currencies);
+    void insertInitialBalances(
+        @Param("accountId") UUID accountId,
+        @Param("currencies") List<String> currencies
+    );
 
     @Update("""
         UPDATE balances
@@ -31,7 +34,11 @@ public interface BalanceMapper {
         WHERE account_id = #{accountId}
           AND currency = #{currency}
         """)
-    int incrementBalance(UUID accountId, String currency, BigDecimal amount);
+    int incrementBalance(
+        @Param("accountId") UUID accountId,
+        @Param("currency") String currency,
+        @Param("amount") BigDecimal amount
+    );
 
     @Update("""
         UPDATE balances
@@ -40,7 +47,11 @@ public interface BalanceMapper {
           AND currency = #{currency}
           AND available_amount >= #{amount}
         """)
-    int decrementBalanceIfEnough(UUID accountId, String currency, BigDecimal amount);
+    int decrementBalanceIfEnough(
+        @Param("accountId") UUID accountId,
+        @Param("currency") String currency,
+        @Param("amount") BigDecimal amount
+    );
 
     @Select("""
         SELECT available_amount
@@ -48,5 +59,8 @@ public interface BalanceMapper {
         WHERE account_id = #{accountId}
           AND currency = #{currency}
         """)
-    BigDecimal findAvailableAmount(UUID accountId, String currency);
+    BigDecimal findAvailableAmount(
+        @Param("accountId") UUID accountId,
+        @Param("currency") String currency
+    );
 }

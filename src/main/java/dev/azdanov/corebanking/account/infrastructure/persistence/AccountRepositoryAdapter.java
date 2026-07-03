@@ -11,11 +11,14 @@ import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.Account
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.TransactionMapper;
 import dev.azdanov.corebanking.shared.money.MoneyFactory;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 
 @Repository
+@Transactional(propagation = Propagation.MANDATORY)
 public class AccountRepositoryAdapter implements AccountRepository {
     private final AccountMapper accountMapper;
     private final TransactionMapper transactionMapper;
@@ -30,11 +33,12 @@ public class AccountRepositoryAdapter implements AccountRepository {
 
     @Override
     public void save(Account account) {
-        accountMapper.upsertAccount(
+        accountMapper.insert(
             account.id().value(),
             account.customerId().value(),
             account.country(),
-            account.createdAt()
+            account.createdAt(),
+            account.updatedAt()
         );
     }
 
@@ -79,8 +83,7 @@ public class AccountRepositoryAdapter implements AccountRepository {
                 TransactionDirection.valueOf(row.direction()),
                 row.description(),
                 MoneyFactory.of(row.currency(), row.balanceAfter()),
-                row.valueTime(),
-                row.bookingTime()
+                row.createdAt()
             ))
             .toList();
     }

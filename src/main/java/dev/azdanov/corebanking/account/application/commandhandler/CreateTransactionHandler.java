@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.UUID;
 
 @Service
 public class CreateTransactionHandler {
@@ -29,21 +28,20 @@ public class CreateTransactionHandler {
 
     @Transactional
     public TransactionResponse createTransaction(
-        UUID accountId,
-        CreateTransactionCommand createTransaction
+        CreateTransactionCommand command
     ) {
-        var account = accountRepository.findByIdWithBalances(new AccountId(accountId));
+        var account = accountRepository.findByIdWithBalances(new AccountId(command.accountId()));
 
-        var direction = TransactionDirection.valueOf(createTransaction.direction());
+        var direction = TransactionDirection.valueOf(command.direction());
         var transaction = account.post(
             direction,
-            createTransaction.currency(),
-            MoneyFactory.of(createTransaction.currency(), createTransaction.amount()),
-            createTransaction.description(),
+            command.currency(),
+            MoneyFactory.of(command.currency(), command.amount()),
+            command.description(),
             Instant.now()
         );
 
-        transactionRepository.post(accountId, createTransaction);
+        transactionRepository.post(transaction);
         return TransactionResponseMapper.toResponse(transaction);
     }
 }

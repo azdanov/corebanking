@@ -83,7 +83,7 @@ class AccountControllerTest {
             var accountId = UuidFactory.generate();
             var customerId = UuidFactory.generate();
             var balances = List.of(new BalanceResponse[]{new BalanceResponse("USD", BigDecimal.ZERO),});
-            var expected = new AccountResponse(accountId, customerId, "US", balances);
+            var expected = new AccountResponse(accountId, customerId, balances);
 
             given(openAccountHandler.createAccount(any(CreateAccountCommand.class))).willReturn(expected);
 
@@ -94,7 +94,6 @@ class AccountControllerTest {
                 .andExpect(content().contentType(APPLICATION_JSON))
                 .andExpect(jsonPath("$.accountId").value(accountId.toString()))
                 .andExpect(jsonPath("$.customerId").value(customerId.toString()))
-                .andExpect(jsonPath("$.country").value("US"))
                 .andExpect(jsonPath("$.balances", hasSize(1)))
                 .andExpect(jsonPath("$.balances[0].currency").value("USD"))
                 .andExpect(jsonPath("$.balances[0].availableAmount").value(0));
@@ -145,7 +144,7 @@ class AccountControllerTest {
             var accountId = UuidFactory.generate();
             var customerId = UuidFactory.generate();
             var balances = List.of(new BalanceResponse[]{new BalanceResponse("GBP", new BigDecimal("1000.00")),});
-            var expected = new AccountResponse(accountId, customerId, "UK", balances);
+            var expected = new AccountResponse(accountId, customerId, balances);
 
             given(getAccountHandler.handle(any(GetAccountQuery.class))).willReturn(expected);
 
@@ -154,7 +153,6 @@ class AccountControllerTest {
                 .andExpect(content().contentType(APPLICATION_JSON))
                 .andExpect(jsonPath("$.accountId").value(accountId.toString()))
                 .andExpect(jsonPath("$.customerId").value(customerId.toString()))
-                .andExpect(jsonPath("$.country").value("UK"))
                 .andExpect(jsonPath("$.balances[0].currency").value("GBP"))
                 .andExpect(jsonPath("$.balances[0].availableAmount").value("1000.00"));
 
@@ -170,14 +168,13 @@ class AccountControllerTest {
                 new BalanceResponse("USD", new BigDecimal("1000.00")),
                 new BalanceResponse("EUR", new BigDecimal("500.00")),
             });
-            var expected = new AccountResponse(accountId, customerId, "US", balances);
+            var expected = new AccountResponse(accountId, customerId, balances);
 
             given(getAccountHandler.handle(any(GetAccountQuery.class))).willReturn(expected);
 
             getAccount(accountId)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accountId").value(accountId.toString()))
-                .andExpect(jsonPath("$.country").value("US"))
                 .andExpect(jsonPath("$.balances", hasSize(2)))
                 .andExpect(jsonPath("$.balances[0].currency").value("USD"))
                 .andExpect(jsonPath("$.balances[0].availableAmount").value("1000.00"))
@@ -206,9 +203,10 @@ class AccountControllerTest {
                 new BigDecimal("9750.00")
             );
 
-            given(createTransactionHandler.createTransaction(any(UUID.class), any(CreateTransactionCommand.class))).willReturn(expectedResponse);
+            given(createTransactionHandler.createTransaction(any(CreateTransactionCommand.class))).willReturn(expectedResponse);
 
-            var request = new CreateTransactionRequest(amount, "EUR", TransactionDirection.OUT, "Test payment");
+            var request = new CreateTransactionRequest(
+                accountId, amount, "EUR", TransactionDirection.OUT, "Test payment");
 
             postTransaction(accountId, request)
                 .andExpect(status().isCreated())
@@ -221,8 +219,8 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.balanceAfter").value("9750.00"));
 
             verify(createTransactionHandler).createTransaction(
-                assertArg(id -> assertThat(id).isEqualTo(accountId)),
                 assertArg(cmd -> {
+                    assertThat(cmd.accountId()).isEqualTo(accountId);
                     assertThat(cmd.amount()).isEqualByComparingTo(amount);
                     assertThat(cmd.currency()).isEqualTo("EUR");
                     assertThat(cmd.direction()).isEqualTo(TransactionDirection.OUT.name());
@@ -236,7 +234,7 @@ class AccountControllerTest {
         void shouldReturn400ForInvalidRequest(CreateTransactionRequest request) throws Exception {
             postTransaction(UuidFactory.generate(), request).andExpect(status().isBadRequest());
 
-            verify(createTransactionHandler, never()).createTransaction(any(), any());
+            verify(createTransactionHandler, never()).createTransaction(any());
         }
 
         @Test
@@ -245,14 +243,15 @@ class AccountControllerTest {
             mockMvc.perform(post(TRANSACTIONS_PATH, UuidFactory.generate()).contentType(APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-            verify(createTransactionHandler, never()).createTransaction(any(), any());
+            verify(createTransactionHandler, never()).createTransaction(any());
         }
 
         static Stream<Arguments> invalidRequests() {
-            return Stream.of(Arguments.of(new CreateTransactionRequest(null, "EUR", TransactionDirection.OUT, "Test")),
-                Arguments.of(new CreateTransactionRequest(new BigDecimal("100"), "", TransactionDirection.OUT, "Test")),
-                Arguments.of(new CreateTransactionRequest(new BigDecimal("100"), "EUR", null, "Test")),
-                Arguments.of(new CreateTransactionRequest(new BigDecimal("100"), "EUR", TransactionDirection.OUT, ""))
+            var id = UuidFactory.generate();
+            return Stream.of(Arguments.of(new CreateTransactionRequest(id, null, "EUR", TransactionDirection.OUT, "Test")),
+                Arguments.of(new CreateTransactionRequest(id, new BigDecimal("100"), "", TransactionDirection.OUT, "Test")),
+                Arguments.of(new CreateTransactionRequest(id, new BigDecimal("100"), "EUR", null, "Test")),
+                Arguments.of(new CreateTransactionRequest(id, new BigDecimal("100"), "EUR", TransactionDirection.OUT, ""))
             );
         }
     }

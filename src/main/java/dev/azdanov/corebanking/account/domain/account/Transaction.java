@@ -12,6 +12,6 @@ public record Transaction(
     TransactionDirection direction,
     String description,
     Money balanceAfter,
-    Instant valueTime,
-    Instant bookingTime) {
+    Instant createdAt
+) {
 }

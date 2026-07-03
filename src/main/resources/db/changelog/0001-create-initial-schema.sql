@@ -11,13 +11,12 @@ CREATE INDEX idx_accounts_customer_id ON accounts (customer_id);
 
 CREATE TABLE balances
 (
-    id               UUID PRIMARY KEY NOT NULL,
-    account_id       UUID             NOT NULL REFERENCES accounts (id),
-    currency         CHAR(3)          NOT NULL,
-    available_amount NUMERIC(19, 2)   NOT NULL DEFAULT 0.00,
-    created_at       TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
-    updated_at       TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
-    CONSTRAINT balances_account_currency_uq UNIQUE (account_id, currency)
+    account_id       UUID           NOT NULL REFERENCES accounts (id),
+    currency         CHAR(3)        NOT NULL,
+    available_amount NUMERIC(19, 2) NOT NULL DEFAULT 0.00,
+    created_at       TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    updated_at       TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (account_id, currency)
 );
 
 CREATE TYPE transaction_direction AS ENUM ('IN', 'OUT');
@@ -31,8 +30,6 @@ CREATE TABLE transactions
     direction     transaction_direction NOT NULL,
     description   TEXT                  NOT NULL,
     balance_after NUMERIC(19, 2)        NOT NULL,
-    value_time    TIMESTAMPTZ           NOT NULL DEFAULT NOW(),
-    booking_time  TIMESTAMPTZ           NOT NULL DEFAULT NOW(),
     created_at    TIMESTAMPTZ           NOT NULL DEFAULT NOW(),
     CONSTRAINT transactions_amount_chk CHECK (amount > 0),
     CONSTRAINT transactions_description_chk CHECK (length(trim(description)) > 0)

@@ -4,10 +4,13 @@ import dev.azdanov.corebanking.account.domain.account.AccountId;
 import dev.azdanov.corebanking.account.domain.repository.BalanceRepository;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.BalanceMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Repository
+@Transactional(propagation = Propagation.MANDATORY)
 public class BalanceRepositoryAdapter implements BalanceRepository {
     private final BalanceMapper balanceMapper;
 

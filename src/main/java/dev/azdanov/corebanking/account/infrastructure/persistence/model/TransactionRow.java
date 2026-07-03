@@ -12,7 +12,6 @@ public record TransactionRow(
     String direction,
     String description,
     BigDecimal balanceAfter,
-    Instant valueTime,
-    Instant bookingTime
+    Instant createdAt
 ) {
 }

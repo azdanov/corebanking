@@ -16,10 +16,11 @@ public final class AccountResponseMapper {
             account.balances().values().stream()
                 .map(
                     balance ->
-                        new BalanceResponse(balance.currency(), balance.availableAmount().getAmount()))
+                        new BalanceResponse(
+                            balance.currency(), balance.availableAmount().getAmount()))
                 .toList();
 
         return new AccountResponse(
-            account.id().value(), account.customerId().value(), account.country(), balanceResponses);
+            account.id().value(), account.customerId().value(), balanceResponses);
     }
 }
