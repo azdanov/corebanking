@@ -20,6 +20,7 @@ repositories {
 
 val mybatisVersion = "4.0.1"
 val jodaMoneyVersion = "2.0.3"
+val uuidGeneratorVersion = "5.1.0"
 
 val mockitoAgent = configurations.create("mockitoAgent")
 
@@ -34,6 +35,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    implementation("com.fasterxml.uuid:java-uuid-generator:$uuidGeneratorVersion")
 
     runtimeOnly("org.postgresql:postgresql")
 
