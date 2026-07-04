@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -38,6 +39,9 @@ class CreateTransactionHandlerTest {
 
     @Mock
     private TransactionRepository transactionRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private CreateTransactionHandler handler;
@@ -185,6 +189,7 @@ class CreateTransactionHandlerTest {
         assertThat(response.accountId()).isEqualTo(accountId.value());
 
         verify(transactionRepository).post(any());
+        verify(eventPublisher).publishEvent(any(Object.class));
     }
 
     @Test
@@ -212,6 +217,7 @@ class CreateTransactionHandlerTest {
         assertThat(response.balanceAfter()).isEqualTo(new BigDecimal("350.00"));
 
         verify(transactionRepository).post(any());
+        verify(eventPublisher).publishEvent(any(Object.class));
     }
 
     @Test
@@ -234,6 +240,7 @@ class CreateTransactionHandlerTest {
             .hasMessage("Insufficient funds");
 
         verify(transactionRepository, never()).post(any());
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
     }
 
     @Test
@@ -254,5 +261,6 @@ class CreateTransactionHandlerTest {
             .hasMessage("Account not found");
 
         verify(transactionRepository, never()).post(any());
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
     }
 }

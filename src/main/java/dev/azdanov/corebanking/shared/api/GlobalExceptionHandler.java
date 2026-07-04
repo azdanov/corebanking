@@ -1,6 +1,5 @@
 package dev.azdanov.corebanking.shared.api;
 
-import dev.azdanov.corebanking.shared.exception.ApplicationException;
 import dev.azdanov.corebanking.shared.exception.BusinessRuleException;
 import dev.azdanov.corebanking.shared.exception.InvalidInputException;
 import dev.azdanov.corebanking.shared.exception.NotFoundException;
@@ -168,20 +167,6 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Invalid Input",
                 message,
-                request.getRequestURI()
-            ));
-    }
-
-    @ExceptionHandler(ApplicationException.class)
-    public ResponseEntity<ErrorResponse> handleApplicationException(
-        ApplicationException ex,
-        HttpServletRequest request
-    ) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(ErrorResponse.of(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal Server Error",
-                ex.getMessage(),
                 request.getRequestURI()
             ));
     }

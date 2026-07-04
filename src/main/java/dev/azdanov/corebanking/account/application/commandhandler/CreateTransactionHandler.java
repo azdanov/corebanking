@@ -3,12 +3,14 @@ package dev.azdanov.corebanking.account.application.commandhandler;
 import dev.azdanov.corebanking.account.api.mapper.TransactionResponseMapper;
 import dev.azdanov.corebanking.account.api.response.TransactionResponse;
 import dev.azdanov.corebanking.account.application.command.CreateTransactionCommand;
+import dev.azdanov.corebanking.account.application.event.TransactionCreatedEvent;
 import dev.azdanov.corebanking.account.domain.account.AccountId;
 import dev.azdanov.corebanking.account.domain.account.TransactionDirection;
 import dev.azdanov.corebanking.account.domain.repository.AccountRepository;
 import dev.azdanov.corebanking.account.domain.repository.TransactionRepository;
 import dev.azdanov.corebanking.shared.exception.InvalidInputException;
 import dev.azdanov.corebanking.shared.money.MoneyFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,13 +20,16 @@ import java.time.Instant;
 public class CreateTransactionHandler {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public CreateTransactionHandler(
         AccountRepository accountRepository,
-        TransactionRepository transactionRepository
+        TransactionRepository transactionRepository,
+        ApplicationEventPublisher eventPublisher
     ) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -59,6 +64,17 @@ public class CreateTransactionHandler {
         );
 
         transactionRepository.post(transaction);
+        eventPublisher.publishEvent(new TransactionCreatedEvent(
+            transaction.id().value(),
+            transaction.accountId().value(),
+            transaction.amount().getAmount(),
+            transaction.currency(),
+            transaction.direction().name(),
+            transaction.description(),
+            transaction.balanceAfter().getAmount(),
+            transaction.createdAt()
+        ));
+
         return TransactionResponseMapper.toResponse(transaction);
     }
 }

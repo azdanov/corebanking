@@ -13,6 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,6 +33,9 @@ class OpenAccountHandlerTest {
 
     @Mock
     private BalanceRepository balanceRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private OpenAccountHandler handler;
@@ -78,6 +82,7 @@ class OpenAccountHandlerTest {
 
         verify(balanceRepository).createInitialBalances(any(), any());
         verify(accountRepository).findByIdWithBalances(any());
+        verify(eventPublisher).publishEvent(any(Object.class));
     }
 
     @Test
@@ -108,6 +113,7 @@ class OpenAccountHandlerTest {
 
         verify(balanceRepository).createInitialBalances(any(), any());
         verify(accountRepository).findByIdWithBalances(any());
+        verify(eventPublisher).publishEvent(any(Object.class));
     }
 
     @Test
@@ -143,6 +149,7 @@ class OpenAccountHandlerTest {
 
         verify(balanceRepository).createInitialBalances(any(), any());
         verify(accountRepository).findByIdWithBalances(any());
+        verify(eventPublisher).publishEvent(any(Object.class));
     }
 
     @Test
@@ -164,5 +171,6 @@ class OpenAccountHandlerTest {
         verify(accountRepository).save(any());
         verify(balanceRepository).createInitialBalances(balanceAccountIdCaptor.capture(), any());
         assertThat(balanceAccountIdCaptor.getValue()).isEqualTo(saveCaptor.getValue().id());
+        verify(eventPublisher).publishEvent(any(Object.class));
     }
 }
