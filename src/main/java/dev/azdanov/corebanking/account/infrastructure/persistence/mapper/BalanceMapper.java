@@ -13,16 +13,16 @@ import java.util.UUID;
 @Mapper
 public interface BalanceMapper {
 
-    @Insert({
-        "<script>",
-        "INSERT INTO balances (account_id, currency, available_amount)",
-        "VALUES",
-        "<foreach collection='currencies' item='currency' separator=','>",
-        "(#{accountId}, #{currency}, 0)",
-        "</foreach>",
-        "ON CONFLICT (account_id, currency) DO NOTHING",
-        "</script>"
-    })
+    @Insert("""
+        <script>
+        INSERT INTO balances (account_id, currency, available_amount)
+        VALUES
+        <foreach collection='currencies' item='currency' separator=','>
+            (#{accountId}, #{currency}, 0)
+        </foreach>
+        ON CONFLICT (account_id, currency) DO NOTHING
+        </script>
+        """)
     void insertInitialBalances(
         @Param("accountId") UUID accountId,
         @Param("currencies") List<String> currencies
