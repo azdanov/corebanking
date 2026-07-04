@@ -51,8 +51,7 @@ class AccountControllerTest {
 
     private static final String ACCOUNTS_PATH = "/api/v1/accounts";
     private static final String ACCOUNT_PATH = ACCOUNTS_PATH + "/{accountId}";
-    private static final String TRANSACTIONS_PATH =
-        ACCOUNT_PATH + "/transactions";
+    private static final String TRANSACTIONS_PATH = ACCOUNT_PATH + "/transactions";
 
     @Autowired
     private MockMvc mockMvc;
@@ -76,34 +75,21 @@ class AccountControllerTest {
     class CreatingAccountWithPostRequestTests {
 
         @Test
-        void shouldCreateAccountWithValidRequestAndReturn201Created()
-            throws Exception {
+        void shouldCreateAccountWithValidRequestAndReturn201Created() throws Exception {
             var accountId = UuidFactory.generate();
             var customerId = UuidFactory.generate();
-            var balances = List.of(new BalanceResponse[]{
-                new BalanceResponse("USD", BigDecimal.ZERO),
-            });
+            var balances = List.of(new BalanceResponse[]{new BalanceResponse("USD", BigDecimal.ZERO),});
             var expected = new AccountResponse(accountId, customerId, balances);
 
-            given(
-                openAccountHandler.createAccount(
-                    any(CreateAccountCommand.class)
-                )
-            ).willReturn(expected);
+            given(openAccountHandler.createAccount(any(CreateAccountCommand.class))).willReturn(expected);
 
-            var request = new CreateAccountRequest(
-                customerId,
-                "US",
-                List.of("USD")
-            );
+            var request = new CreateAccountRequest(customerId, "US", List.of("USD"));
 
             postAccount(request)
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(APPLICATION_JSON))
                 .andExpect(jsonPath("$.accountId").value(accountId.toString()))
-                .andExpect(
-                    jsonPath("$.customerId").value(customerId.toString())
-                )
+                .andExpect(jsonPath("$.customerId").value(customerId.toString()))
                 .andExpect(jsonPath("$.balances", hasSize(1)))
                 .andExpect(jsonPath("$.balances[0].currency").value("USD"))
                 .andExpect(jsonPath("$.balances[0].availableAmount").value(0));
@@ -119,17 +105,14 @@ class AccountControllerTest {
 
         @ParameterizedTest
         @MethodSource("invalidRequests")
-        void shouldReturn400BadRequestForInvalidRequest(
-            CreateAccountRequest request
-        ) throws Exception {
+        void shouldReturn400BadRequestForInvalidRequest(CreateAccountRequest request) throws Exception {
             postAccount(request).andExpect(status().isBadRequest());
 
             verify(openAccountHandler, never()).createAccount(any());
         }
 
         @Test
-        void shouldReturn400BadRequestWhenRequestBodyMissing()
-            throws Exception {
+        void shouldReturn400BadRequestWhenRequestBodyMissing() throws Exception {
             mockMvc
                 .perform(post(ACCOUNTS_PATH).contentType(APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
@@ -139,33 +122,11 @@ class AccountControllerTest {
 
         static Stream<Arguments> invalidRequests() {
             return Stream.of(
-                Arguments.of(
-                    new CreateAccountRequest(null, "US", List.of("USD"))
-                ),
-                Arguments.of(
-                    new CreateAccountRequest(
-                        UuidFactory.generate(),
-                        "",
-                        List.of("USD")
-                    )
-                ),
-                Arguments.of(
-                    new CreateAccountRequest(
-                        UuidFactory.generate(),
-                        "US",
-                        List.of()
-                    )
-                ),
-                Arguments.of(
-                    new CreateAccountRequest(
-                        UuidFactory.generate(),
-                        null,
-                        List.of("USD")
-                    )
-                ),
-                Arguments.of(
-                    new CreateAccountRequest(UuidFactory.generate(), "US", null)
-                )
+                Arguments.of(new CreateAccountRequest(null, "US", List.of("USD"))),
+                Arguments.of(new CreateAccountRequest(UuidFactory.generate(), "", List.of("USD"))),
+                Arguments.of(new CreateAccountRequest(UuidFactory.generate(), "US", List.of())),
+                Arguments.of(new CreateAccountRequest(UuidFactory.generate(), null, List.of("USD"))),
+                Arguments.of(new CreateAccountRequest(UuidFactory.generate(), "US", null))
             );
         }
     }
@@ -177,26 +138,18 @@ class AccountControllerTest {
         void shouldReturnAccountWithValidAccountId() throws Exception {
             var accountId = UuidFactory.generate();
             var customerId = UuidFactory.generate();
-            var balances = List.of(new BalanceResponse[]{
-                new BalanceResponse("GBP", new BigDecimal("1000.00")),
-            });
+            var balances = List.of(new BalanceResponse[]{new BalanceResponse("GBP", new BigDecimal("1000.00")),});
             var expected = new AccountResponse(accountId, customerId, balances);
 
-            given(
-                getAccountHandler.handle(any(GetAccountQuery.class))
-            ).willReturn(expected);
+            given(getAccountHandler.handle(any(GetAccountQuery.class))).willReturn(expected);
 
             getAccount(accountId)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(APPLICATION_JSON))
                 .andExpect(jsonPath("$.accountId").value(accountId.toString()))
-                .andExpect(
-                    jsonPath("$.customerId").value(customerId.toString())
-                )
+                .andExpect(jsonPath("$.customerId").value(customerId.toString()))
                 .andExpect(jsonPath("$.balances[0].currency").value("GBP"))
-                .andExpect(
-                    jsonPath("$.balances[0].availableAmount").value("1000.00")
-                );
+                .andExpect(jsonPath("$.balances[0].availableAmount").value("1000.00"));
 
             verify(getAccountHandler).handle(
                 assertArg(q -> assertThat(q.accountId()).isEqualTo(accountId))
@@ -214,22 +167,16 @@ class AccountControllerTest {
             });
             var expected = new AccountResponse(accountId, customerId, balances);
 
-            given(
-                getAccountHandler.handle(any(GetAccountQuery.class))
-            ).willReturn(expected);
+            given(getAccountHandler.handle(any(GetAccountQuery.class))).willReturn(expected);
 
             getAccount(accountId)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accountId").value(accountId.toString()))
                 .andExpect(jsonPath("$.balances", hasSize(2)))
                 .andExpect(jsonPath("$.balances[0].currency").value("USD"))
-                .andExpect(
-                    jsonPath("$.balances[0].availableAmount").value("1000.00")
-                )
+                .andExpect(jsonPath("$.balances[0].availableAmount").value("1000.00"))
                 .andExpect(jsonPath("$.balances[1].currency").value("EUR"))
-                .andExpect(
-                    jsonPath("$.balances[1].availableAmount").value("500.00")
-                );
+                .andExpect(jsonPath("$.balances[1].availableAmount").value("500.00"));
         }
     }
 
@@ -252,11 +199,7 @@ class AccountControllerTest {
                 new BigDecimal("9750.00")
             );
 
-            given(
-                createTransactionHandler.createTransaction(
-                    any(CreateTransactionCommand.class)
-                )
-            ).willReturn(expectedResponse);
+            given(createTransactionHandler.createTransaction(any(CreateTransactionCommand.class))).willReturn(expectedResponse);
 
             var request = new CreateTransactionRequest(
                 accountId,
@@ -269,9 +212,7 @@ class AccountControllerTest {
             postTransaction(accountId, request)
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(APPLICATION_JSON))
-                .andExpect(
-                    jsonPath("$.transactionId").value(transactionId.toString())
-                )
+                .andExpect(jsonPath("$.transactionId").value(transactionId.toString()))
                 .andExpect(jsonPath("$.amount").value(amount))
                 .andExpect(jsonPath("$.currency").value("EUR"))
                 .andExpect(jsonPath("$.direction").value("OUT"))
@@ -283,9 +224,7 @@ class AccountControllerTest {
                     assertThat(cmd.accountId()).isEqualTo(accountId);
                     assertThat(cmd.amount()).isEqualByComparingTo(amount);
                     assertThat(cmd.currency()).isEqualTo("EUR");
-                    assertThat(cmd.direction()).isEqualTo(
-                        TransactionDirection.OUT.name()
-                    );
+                    assertThat(cmd.direction()).isEqualTo(TransactionDirection.OUT.name());
                     assertThat(cmd.description()).isEqualTo("Test payment");
                 })
             );
@@ -293,25 +232,16 @@ class AccountControllerTest {
 
         @ParameterizedTest
         @MethodSource("invalidRequests")
-        void shouldReturn400BadRequestForInvalidRequest(
-            CreateTransactionRequest request
-        ) throws Exception {
-            postTransaction(UuidFactory.generate(), request).andExpect(
-                status().isBadRequest()
-            );
+        void shouldReturn400BadRequestForInvalidRequest(CreateTransactionRequest request) throws Exception {
+            postTransaction(UuidFactory.generate(), request).andExpect(status().isBadRequest());
 
             verify(createTransactionHandler, never()).createTransaction(any());
         }
 
         @Test
-        void shouldReturn400BadRequestWhenRequestBodyMissing()
-            throws Exception {
+        void shouldReturn400BadRequestWhenRequestBodyMissing() throws Exception {
             mockMvc
-                .perform(
-                    post(TRANSACTIONS_PATH, UuidFactory.generate()).contentType(
-                        APPLICATION_JSON
-                    )
-                )
+                .perform(post(TRANSACTIONS_PATH, UuidFactory.generate()).contentType(APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
             verify(createTransactionHandler, never()).createTransaction(any());
@@ -321,40 +251,16 @@ class AccountControllerTest {
             var id = UuidFactory.generate();
             return Stream.of(
                 Arguments.of(
-                    new CreateTransactionRequest(
-                        id,
-                        null,
-                        "EUR",
-                        TransactionDirection.OUT,
-                        "Test"
-                    )
+                    new CreateTransactionRequest(id, null, "EUR", TransactionDirection.OUT, "Test")
                 ),
                 Arguments.of(
-                    new CreateTransactionRequest(
-                        id,
-                        new BigDecimal("100"),
-                        "",
-                        TransactionDirection.OUT,
-                        "Test"
-                    )
+                    new CreateTransactionRequest(id, new BigDecimal("100"), "", TransactionDirection.OUT, "Test")
                 ),
                 Arguments.of(
-                    new CreateTransactionRequest(
-                        id,
-                        new BigDecimal("100"),
-                        "EUR",
-                        null,
-                        "Test"
-                    )
+                    new CreateTransactionRequest(id, new BigDecimal("100"), "EUR", null, "Test")
                 ),
                 Arguments.of(
-                    new CreateTransactionRequest(
-                        id,
-                        new BigDecimal("100"),
-                        "EUR",
-                        TransactionDirection.OUT,
-                        ""
-                    )
+                    new CreateTransactionRequest(id, new BigDecimal("100"), "EUR", TransactionDirection.OUT, "")
                 )
             );
         }
@@ -387,9 +293,7 @@ class AccountControllerTest {
                 )
             );
 
-            given(
-                getTransactionsHandler.handle(any(GetTransactionsQuery.class))
-            ).willReturn(expected);
+            given(getTransactionsHandler.handle(any(GetTransactionsQuery.class))).willReturn(expected);
 
             getTransactions(accountId)
                 .andExpect(status().isOk())
@@ -403,13 +307,10 @@ class AccountControllerTest {
         }
 
         @Test
-        void shouldReturnEmptyListWhenAccountHasNoTransactions()
-            throws Exception {
+        void shouldReturnEmptyListWhenAccountHasNoTransactions() throws Exception {
             var accountId = UuidFactory.generate();
 
-            given(
-                getTransactionsHandler.handle(any(GetTransactionsQuery.class))
-            ).willReturn(List.of());
+            given(getTransactionsHandler.handle(any(GetTransactionsQuery.class))).willReturn(List.of());
 
             getTransactions(accountId)
                 .andExpect(status().isOk())
@@ -417,12 +318,9 @@ class AccountControllerTest {
         }
     }
 
-    private ResultActions postAccount(CreateAccountRequest request)
-        throws Exception {
-        return mockMvc.perform(
-            post(ACCOUNTS_PATH)
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
+    private ResultActions postAccount(CreateAccountRequest request) throws Exception {
+        return mockMvc.perform(post(ACCOUNTS_PATH).contentType(APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request))
         );
     }
 
@@ -430,14 +328,9 @@ class AccountControllerTest {
         return mockMvc.perform(get(ACCOUNT_PATH, accountId));
     }
 
-    private ResultActions postTransaction(
-        UUID accountId,
-        CreateTransactionRequest request
-    ) throws Exception {
-        return mockMvc.perform(
-            post(TRANSACTIONS_PATH, accountId)
-                .contentType(APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
+    private ResultActions postTransaction(UUID accountId, CreateTransactionRequest request) throws Exception {
+        return mockMvc.perform(post(TRANSACTIONS_PATH, accountId).contentType(APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request))
         );
     }
 
