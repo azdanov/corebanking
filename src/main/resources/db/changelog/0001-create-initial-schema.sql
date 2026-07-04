@@ -12,7 +12,7 @@ CREATE INDEX idx_accounts_customer_id ON accounts (customer_id);
 CREATE TABLE balances
 (
     account_id       UUID           NOT NULL REFERENCES accounts (id),
-    currency         CHAR(3)        NOT NULL,
+    currency         VARCHAR(3)     NOT NULL,
     available_amount NUMERIC(19, 2) NOT NULL DEFAULT 0.00,
     created_at       TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     updated_at       TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
@@ -26,7 +26,7 @@ CREATE TABLE transactions
     id            UUID PRIMARY KEY      NOT NULL,
     account_id    UUID                  NOT NULL REFERENCES accounts (id),
     amount        NUMERIC(19, 2)        NOT NULL,
-    currency      CHAR(3)               NOT NULL,
+    currency      VARCHAR(3)            NOT NULL,
     direction     transaction_direction NOT NULL,
     description   TEXT                  NOT NULL,
     balance_after NUMERIC(19, 2)        NOT NULL,
