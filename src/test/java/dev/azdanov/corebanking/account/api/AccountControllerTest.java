@@ -247,6 +247,45 @@ class AccountControllerTest {
             verify(createTransactionHandler, never()).createTransaction(any());
         }
 
+        @Test
+        void shouldReturn400BadRequestWhenPathAndBodyAccountIdsDoNotMatch() throws Exception {
+            var pathAccountId = UuidFactory.generate();
+            var bodyAccountId = UuidFactory.generate();
+            var request = new CreateTransactionRequest(
+                bodyAccountId,
+                new BigDecimal("100"),
+                "EUR",
+                TransactionDirection.OUT,
+                "Test payment"
+            );
+
+            postTransaction(pathAccountId, request)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Account ID in path and body must match"));
+
+            verify(createTransactionHandler, never()).createTransaction(any());
+        }
+
+        @Test
+        void shouldReturn400BadRequestWhenInvalidCurrencyIsRejectedByHandler() throws Exception {
+            var accountId = UuidFactory.generate();
+            var request = new CreateTransactionRequest(
+                accountId,
+                new BigDecimal("100"),
+                "ABC",
+                TransactionDirection.IN,
+                "Deposit"
+            );
+
+            given(createTransactionHandler.createTransaction(any(CreateTransactionCommand.class)))
+                .willThrow(new IllegalArgumentException("Currency ABC is not supported. Allowed: EUR, GBP, USD, SEK"));
+
+            postTransaction(accountId, request)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Invalid Input"))
+                .andExpect(jsonPath("$.message").value("Currency ABC is not supported. Allowed: EUR, GBP, USD, SEK"));
+        }
+
         static Stream<Arguments> invalidRequests() {
             var id = UuidFactory.generate();
             return Stream.of(

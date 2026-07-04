@@ -8,6 +8,7 @@ import dev.azdanov.corebanking.account.domain.account.TransactionDirection;
 import dev.azdanov.corebanking.account.domain.repository.AccountRepository;
 import dev.azdanov.corebanking.account.domain.repository.BalanceRepository;
 import dev.azdanov.corebanking.account.domain.repository.TransactionRepository;
+import dev.azdanov.corebanking.shared.exception.BusinessRuleException;
 import dev.azdanov.corebanking.shared.money.MoneyFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -152,7 +153,7 @@ class TransactionRepositoryAdapterTest {
             var withdrawalAmount = MoneyFactory.of("USD", new BigDecimal("2000.00"));
 
             assertThatThrownBy(() -> account.post(TransactionDirection.OUT, "USD", withdrawalAmount, "Overdraft attempt", FIXED_TIME))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Insufficient funds");
 
             var updated = accountRepository.findByIdWithBalances(accountId);
@@ -164,7 +165,7 @@ class TransactionRepositoryAdapterTest {
             var withdrawalAmount = MoneyFactory.of("USD", new BigDecimal("1000.00"));
 
             assertThatThrownBy(() -> account.post(TransactionDirection.OUT, "USD", withdrawalAmount, "Empty account", FIXED_TIME))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Insufficient funds");
         }
 

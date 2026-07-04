@@ -4,6 +4,7 @@ import dev.azdanov.corebanking.account.domain.account.Transaction;
 import dev.azdanov.corebanking.account.domain.repository.TransactionRepository;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.BalanceMapper;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.TransactionMapper;
+import dev.azdanov.corebanking.shared.exception.BusinessRuleException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +33,7 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
                 transaction.accountId().value(), transaction.currency(), transaction.amount().getAmount());
         };
         if (updatedRows == 0) {
-            throw new IllegalStateException("Balance update rejected for account " + transaction.accountId());
+            throw new BusinessRuleException("Balance update rejected for account " + transaction.accountId());
         }
 
         transactionMapper.insert(

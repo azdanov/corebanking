@@ -12,6 +12,7 @@ import dev.azdanov.corebanking.account.application.query.GetAccountQuery;
 import dev.azdanov.corebanking.account.application.query.GetTransactionsQuery;
 import dev.azdanov.corebanking.account.application.queryhandler.GetAccountHandler;
 import dev.azdanov.corebanking.account.application.queryhandler.GetTransactionsHandler;
+import dev.azdanov.corebanking.shared.exception.InvalidInputException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -67,6 +68,10 @@ public class AccountController {
         @PathVariable UUID accountId,
         @Valid @RequestBody CreateTransactionRequest request
     ) {
+        if (!accountId.equals(request.accountId())) {
+            throw new InvalidInputException("Account ID in path and body must match");
+        }
+
         var createTransaction = new CreateTransactionCommand(
             request.accountId(), request.amount(), request.currency(), request.direction().name(), request.description());
         var transaction = createTransactionHandler.createTransaction(createTransaction);

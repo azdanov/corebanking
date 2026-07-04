@@ -8,6 +8,7 @@ import dev.azdanov.corebanking.account.domain.account.TransactionDirection;
 import dev.azdanov.corebanking.account.domain.repository.AccountRepository;
 import dev.azdanov.corebanking.account.domain.repository.BalanceRepository;
 import dev.azdanov.corebanking.account.domain.repository.TransactionRepository;
+import dev.azdanov.corebanking.shared.exception.NotFoundException;
 import dev.azdanov.corebanking.shared.money.MoneyFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -107,7 +108,7 @@ class AccountRepositoryAdapterTest {
             var missingAccountId = AccountId.create();
 
             assertThatThrownBy(() -> accountRepository.findByIdWithBalances(missingAccountId))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Account not found");
         }
 

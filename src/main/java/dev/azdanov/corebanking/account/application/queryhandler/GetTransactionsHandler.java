@@ -20,7 +20,8 @@ public class GetTransactionsHandler {
 
     @Transactional(readOnly = true)
     public List<TransactionResponse> handle(GetTransactionsQuery query) {
-        return accountRepository.findTransactions(new AccountId(query.accountId())).stream()
+        var account = accountRepository.findByIdWithBalances(new AccountId(query.accountId()));
+        return accountRepository.findTransactions(new AccountId(account.id().value())).stream()
             .map(TransactionResponseMapper::toResponse)
             .toList();
     }

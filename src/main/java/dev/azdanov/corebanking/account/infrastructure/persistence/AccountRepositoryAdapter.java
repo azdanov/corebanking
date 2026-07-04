@@ -9,6 +9,7 @@ import dev.azdanov.corebanking.account.domain.account.TransactionId;
 import dev.azdanov.corebanking.account.domain.repository.AccountRepository;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.AccountMapper;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.TransactionMapper;
+import dev.azdanov.corebanking.shared.exception.NotFoundException;
 import dev.azdanov.corebanking.shared.money.MoneyFactory;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
@@ -46,7 +47,7 @@ public class AccountRepositoryAdapter implements AccountRepository {
     public Account findByIdWithBalances(AccountId accountId) {
         var accountRow = accountMapper.findById(accountId.value());
         if (accountRow == null) {
-            throw new IllegalArgumentException("Account not found: " + accountId.value());
+            throw new NotFoundException("Account not found: " + accountId.value());
         }
 
         var balances = accountMapper.findBalancesByAccountId(accountId.value());

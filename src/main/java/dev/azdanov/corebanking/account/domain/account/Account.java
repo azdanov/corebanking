@@ -1,5 +1,7 @@
 package dev.azdanov.corebanking.account.domain.account;
 
+import dev.azdanov.corebanking.shared.exception.BusinessRuleException;
+import dev.azdanov.corebanking.shared.exception.NotFoundException;
 import dev.azdanov.corebanking.shared.money.MoneyFactory;
 import org.joda.money.Money;
 
@@ -63,7 +65,7 @@ public class Account {
     public Balance balance(String currency) {
         Balance balance = balances.get(currency);
         if (balance == null) {
-            throw new IllegalArgumentException("Balance not found for currency " + currency);
+            throw new NotFoundException("Balance not found for currency " + currency);
         }
         return balance;
     }
@@ -82,7 +84,7 @@ public class Account {
                 case OUT -> {
                     Money next = current.availableAmount().minus(amount);
                     if (next.isNegativeOrZero()) {
-                        throw new IllegalStateException("Insufficient funds");
+                        throw new BusinessRuleException("Insufficient funds");
                     }
                     yield next;
                 }

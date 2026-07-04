@@ -7,6 +7,7 @@ import dev.azdanov.corebanking.account.domain.account.AccountId;
 import dev.azdanov.corebanking.account.domain.account.TransactionDirection;
 import dev.azdanov.corebanking.account.domain.repository.AccountRepository;
 import dev.azdanov.corebanking.account.domain.repository.TransactionRepository;
+import dev.azdanov.corebanking.shared.exception.InvalidInputException;
 import dev.azdanov.corebanking.shared.money.MoneyFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,9 +31,25 @@ public class CreateTransactionHandler {
     public TransactionResponse createTransaction(
         CreateTransactionCommand command
     ) {
+        if (command.direction() == null || command.direction().isBlank()) {
+            throw new InvalidInputException("Invalid direction: value is required");
+        }
+        if (command.description() == null || command.description().isBlank()) {
+            throw new InvalidInputException("Description missing");
+        }
+        if (command.amount() != null && command.amount().signum() < 0) {
+            throw new InvalidInputException("Invalid amount: value cannot be negative");
+        }
+
+        TransactionDirection direction;
+        try {
+            direction = TransactionDirection.valueOf(command.direction());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidInputException("Invalid direction: " + command.direction(), e);
+        }
+
         var account = accountRepository.findByIdWithBalances(new AccountId(command.accountId()));
 
-        var direction = TransactionDirection.valueOf(command.direction());
         var transaction = account.post(
             direction,
             command.currency(),
