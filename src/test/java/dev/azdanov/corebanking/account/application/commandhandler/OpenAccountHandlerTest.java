@@ -20,8 +20,10 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -172,5 +174,53 @@ class OpenAccountHandlerTest {
         verify(balanceRepository).createInitialBalances(balanceAccountIdCaptor.capture(), any());
         assertThat(balanceAccountIdCaptor.getValue()).isEqualTo(saveCaptor.getValue().id());
         verify(eventPublisher).publishEvent(any(Object.class));
+    }
+
+    @Test
+    void shouldRejectInvalidCurrency() {
+        UUID customerId = UuidFactory.generate();
+        var command = new CreateAccountCommand(customerId, "US", List.of("USD", "XYZ"));
+
+        assertThatThrownBy(() -> handler.createAccount(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("XYZ");
+
+        verify(accountRepository, never()).save(any());
+        verify(balanceRepository, never()).createInitialBalances(any(), any());
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
+    }
+
+    @Test
+    void shouldRejectAllCurrenciesWhenNoneAreSupported() {
+        UUID customerId = UuidFactory.generate();
+        var command = new CreateAccountCommand(customerId, "US", List.of("XYZ", "ABC"));
+
+        assertThatThrownBy(() -> handler.createAccount(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("XYZ");
+
+        verify(accountRepository, never()).save(any());
+        verify(balanceRepository, never()).createInitialBalances(any(), any());
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
+    }
+
+    @Test
+    void shouldDeduplicateRepeatedCurrenciesBeforePersisting() {
+        UUID customerId = UuidFactory.generate();
+        var command = new CreateAccountCommand(customerId, "US", List.of("USD", "USD", "EUR"));
+
+        ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<String>> currenciesCaptor = ArgumentCaptor.forClass(List.class);
+
+        doNothing().when(accountRepository).save(accountCaptor.capture());
+        when(accountRepository.findByIdWithBalances(any()))
+            .thenAnswer(_ -> accountCaptor.getValue());
+        doNothing().when(balanceRepository).createInitialBalances(any(), currenciesCaptor.capture());
+
+        handler.createAccount(command);
+
+        assertThat(accountCaptor.getValue().balances()).containsOnlyKeys("USD", "EUR");
+        assertThat(currenciesCaptor.getValue()).containsExactly("USD", "EUR");
     }
 }

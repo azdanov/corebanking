@@ -20,7 +20,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Set;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -158,7 +158,7 @@ class CreateTransactionHandlerTest {
     private Account createAccountWithBalance(BigDecimal initialBalance) {
         AccountId accountId = AccountId.create();
         CustomerId customerId = CustomerId.create();
-        Account account = new Account(accountId, customerId, "US", Set.of("USD"), FIXED_TIME);
+        Account account = new Account(accountId, customerId, "US", List.of("USD"), FIXED_TIME);
         account.balances().get("USD").setAvailableAmount(MoneyFactory.of("USD", initialBalance));
         return account;
     }

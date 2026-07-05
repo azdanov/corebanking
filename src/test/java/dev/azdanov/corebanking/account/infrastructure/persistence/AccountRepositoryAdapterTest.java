@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -50,7 +49,7 @@ class AccountRepositoryAdapterTest {
     void setUp() {
         accountId = AccountId.create();
         customerId = CustomerId.create();
-        account = createAccount(Set.of("USD", "EUR"));
+        account = createAccount(List.of("USD", "EUR"));
         accountRepository.save(account);
         balanceRepository.createInitialBalances(accountId, List.of("USD", "EUR"));
     }
@@ -116,7 +115,7 @@ class AccountRepositoryAdapterTest {
         void shouldReturnAccountWithEmptyBalancesWhenNoneSeeded() {
             var orphanId = AccountId.create();
             var orphanCustomer = CustomerId.create();
-            var orphan = new Account(orphanId, orphanCustomer, "GB", Set.of(), FIXED_TIME);
+            var orphan = new Account(orphanId, orphanCustomer, "GB", List.of(), FIXED_TIME);
             accountRepository.save(orphan);
 
             var found = accountRepository.findByIdWithBalances(orphanId);
@@ -174,7 +173,7 @@ class AccountRepositoryAdapterTest {
         }
     }
 
-    private Account createAccount(Set<String> currencies) {
+    private Account createAccount(List<String> currencies) {
         return new Account(accountId, customerId, "US", currencies, FIXED_TIME);
     }
 }

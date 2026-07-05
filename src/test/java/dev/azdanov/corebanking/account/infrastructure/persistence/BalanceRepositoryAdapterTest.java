@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -58,7 +57,7 @@ class BalanceRepositoryAdapterTest {
 
         @Test
         void shouldInsertBalanceRowsForEachRequestedCurrency() {
-            var account = createAccount(Set.of());
+            var account = createAccount(List.of());
             accountRepository.save(account);
 
             balanceRepository.createInitialBalances(accountId, List.of("USD", "EUR", "GBP"));
@@ -82,7 +81,7 @@ class BalanceRepositoryAdapterTest {
 
         @Test
         void shouldNotCreateDuplicateBalanceRowsForExistingCurrencies() {
-            var account = createAccount(Set.of());
+            var account = createAccount(List.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("USD", "EUR"));
 
@@ -100,7 +99,7 @@ class BalanceRepositoryAdapterTest {
 
         @Test
         void shouldCreateSingleBalanceRowForOneCurrency() {
-            var account = createAccount(Set.of());
+            var account = createAccount(List.of());
             accountRepository.save(account);
 
             balanceRepository.createInitialBalances(accountId, List.of("SEK"));
@@ -113,7 +112,7 @@ class BalanceRepositoryAdapterTest {
 
         @Test
         void shouldNotInsertAnyRowsWhenNoCurrenciesProvided() {
-            var account = createAccount(Set.of());
+            var account = createAccount(List.of());
             accountRepository.save(account);
 
             var balances = accountMapper.findBalancesByAccountId(accountId.value());
@@ -126,7 +125,7 @@ class BalanceRepositoryAdapterTest {
 
         @Test
         void shouldIncrementBalanceForDeposit() {
-            var account = createAccount(Set.of());
+            var account = createAccount(List.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("USD"));
 
@@ -141,7 +140,7 @@ class BalanceRepositoryAdapterTest {
 
         @Test
         void shouldAccumulateMultipleDepositsOnTheSameBalance() {
-            var account = createAccount(Set.of());
+            var account = createAccount(List.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("EUR"));
 
@@ -154,7 +153,7 @@ class BalanceRepositoryAdapterTest {
 
         @Test
         void shouldDecrementBalanceForWithdrawal() {
-            var account = createAccount(Set.of());
+            var account = createAccount(List.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("GBP"));
             balanceMapper.incrementBalance(accountId.value(), "GBP", new BigDecimal("200.00"));
@@ -168,7 +167,7 @@ class BalanceRepositoryAdapterTest {
 
         @Test
         void shouldNotDecrementBalanceWhenInsufficientFunds() {
-            var account = createAccount(Set.of());
+            var account = createAccount(List.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("USD"));
             balanceMapper.incrementBalance(accountId.value(), "USD", new BigDecimal("50.00"));
@@ -182,7 +181,7 @@ class BalanceRepositoryAdapterTest {
 
         @Test
         void shouldAllowExactWithdrawalThatBringsBalanceToZero() {
-            var account = createAccount(Set.of());
+            var account = createAccount(List.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("USD"));
             balanceMapper.incrementBalance(accountId.value(), "USD", new BigDecimal("100.00"));
@@ -196,7 +195,7 @@ class BalanceRepositoryAdapterTest {
 
         @Test
         void shouldNotAffectOtherCurrencyBalancesWhenUpdatingOne() {
-            var account = createAccount(Set.of());
+            var account = createAccount(List.of());
             accountRepository.save(account);
             balanceRepository.createInitialBalances(accountId, List.of("USD", "EUR"));
             balanceMapper.incrementBalance(accountId.value(), "USD", new BigDecimal("100.00"));
@@ -209,7 +208,7 @@ class BalanceRepositoryAdapterTest {
         }
     }
 
-    private Account createAccount(Set<String> currencies) {
+    private Account createAccount(List<String> currencies) {
         return new Account(accountId, customerId, COUNTRY, currencies, FIXED_TIME);
     }
 }

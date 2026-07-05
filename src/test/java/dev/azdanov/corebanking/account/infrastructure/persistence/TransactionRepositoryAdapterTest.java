@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -50,7 +49,7 @@ class TransactionRepositoryAdapterTest {
     void setUp() {
         accountId = AccountId.create();
         var customerId = CustomerId.create();
-        account = createAccount(customerId, Set.of("USD", "EUR"));
+        account = createAccount(customerId, List.of("USD", "EUR"));
         accountRepository.save(account);
         balanceRepository.createInitialBalances(accountId, List.of("USD", "EUR"));
     }
@@ -161,12 +160,15 @@ class TransactionRepositoryAdapterTest {
         }
 
         @Test
-        void shouldRejectWithdrawalOfExactlyAvailableBalance() {
+        void shouldAllowWithdrawalOfExactlyAvailableBalance() {
             var withdrawalAmount = MoneyFactory.of("USD", new BigDecimal("1000.00"));
+            var transaction = account.post(TransactionDirection.OUT, "USD", withdrawalAmount, "Empty account", FIXED_TIME);
 
-            assertThatThrownBy(() -> account.post(TransactionDirection.OUT, "USD", withdrawalAmount, "Empty account", FIXED_TIME))
-                .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("Insufficient funds");
+            transactionRepository.post(transaction);
+
+            var updated = accountRepository.findByIdWithBalances(accountId);
+            assertThat(updated.balance("USD").availableAmount().getAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+            assertThat(transaction.balanceAfter().getAmount()).isEqualByComparingTo(BigDecimal.ZERO);
         }
 
         @Test
@@ -210,7 +212,7 @@ class TransactionRepositoryAdapterTest {
         }
     }
 
-    private Account createAccount(CustomerId customerId, Set<String> currencies) {
+    private Account createAccount(CustomerId customerId, List<String> currencies) {
         return new Account(accountId, customerId, COUNTRY, currencies, FIXED_TIME);
     }
 }
