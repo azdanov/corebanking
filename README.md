@@ -104,11 +104,13 @@ k6 run loadtest.js
 
 Measured on a local Docker stack with resource-constrained services:
 
-| Service | CPU | Memory |
-|---------|-----|--------|
-| API | 1 core | 1 GB |
-| PostgreSQL | 1 core | 1 GB |
-| RabbitMQ | 1 core | 512 MB |
+| Service    | CPU    | Memory |
+| ---------- | ------ | ------ |
+| API        | 1 core | 1 GB   |
+| PostgreSQL | 1 core | 1 GB   |
+| RabbitMQ   | 1 core | 512 MB |
+
+> On AMD Ryzen 7 PRO 8840U (16) @ 5.13 GHz
 
 k6 load test with 50 VUs (Virtual Users) over 2 minutes:
 
