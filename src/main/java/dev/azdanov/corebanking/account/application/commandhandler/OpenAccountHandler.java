@@ -9,13 +9,13 @@ import dev.azdanov.corebanking.account.domain.account.AccountId;
 import dev.azdanov.corebanking.account.domain.account.CustomerId;
 import dev.azdanov.corebanking.account.domain.repository.AccountRepository;
 import dev.azdanov.corebanking.account.domain.repository.BalanceRepository;
+import dev.azdanov.corebanking.shared.money.CurrencyFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class OpenAccountHandler {
@@ -35,21 +35,30 @@ public class OpenAccountHandler {
 
     @Transactional
     public AccountResponse createAccount(CreateAccountCommand command) {
+        var currencies = getValidatedCurrencies(command);
+
         var accountId = AccountId.create();
         var customerId = new CustomerId(command.customerId());
-        var account = new Account(accountId, customerId, command.country(), Set.copyOf(command.currencies()), Instant.now());
+        var account = new Account(accountId, customerId, command.country(), currencies, Instant.now());
 
         accountRepository.save(account);
-        balanceRepository.createInitialBalances(accountId, command.currencies());
+        balanceRepository.createInitialBalances(accountId, currencies);
 
         eventPublisher.publishEvent(new AccountCreatedEvent(
             account.id().value(),
             account.customerId().value(),
             account.country(),
-            List.copyOf(command.currencies()),
+            currencies,
             Instant.now()
         ));
 
         return AccountResponseMapper.toResponse(accountRepository.findByIdWithBalances(accountId));
+    }
+
+    private static List<String> getValidatedCurrencies(CreateAccountCommand command) {
+        return command.currencies().stream()
+            .map(currency -> CurrencyFactory.of(currency).getCode())
+            .distinct()
+            .toList();
     }
 }
