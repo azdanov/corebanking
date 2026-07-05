@@ -31,7 +31,6 @@ CREATE TABLE transactions
     description   TEXT                  NOT NULL,
     balance_after NUMERIC(19, 2)        NOT NULL,
     created_at    TIMESTAMPTZ           NOT NULL DEFAULT NOW(),
-    CONSTRAINT transactions_amount_chk CHECK (amount > 0),
     CONSTRAINT transactions_description_chk CHECK (length(trim(description)) > 0)
 );
 
