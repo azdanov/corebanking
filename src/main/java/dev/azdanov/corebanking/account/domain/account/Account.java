@@ -7,8 +7,8 @@ import org.joda.money.Money;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class Account {
     private final AccountId id;
@@ -22,7 +22,7 @@ public class Account {
         AccountId id,
         CustomerId customerId,
         String country,
-        Set<String> currencies,
+        List<String> currencies,
         Instant now
     ) {
         this.id = id;
