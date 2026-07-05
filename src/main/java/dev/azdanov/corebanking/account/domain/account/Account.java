@@ -83,7 +83,7 @@ public class Account {
                 case IN -> current.availableAmount().plus(amount);
                 case OUT -> {
                     Money next = current.availableAmount().minus(amount);
-                    if (next.isNegativeOrZero()) {
+                    if (next.isNegative()) {
                         throw new BusinessRuleException("Insufficient funds");
                     }
                     yield next;
