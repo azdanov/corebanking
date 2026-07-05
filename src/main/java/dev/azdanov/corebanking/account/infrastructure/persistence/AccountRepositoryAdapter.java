@@ -9,13 +9,13 @@ import dev.azdanov.corebanking.account.domain.account.TransactionId;
 import dev.azdanov.corebanking.account.domain.repository.AccountRepository;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.AccountMapper;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.TransactionMapper;
+import dev.azdanov.corebanking.account.infrastructure.persistence.model.BalanceRow;
 import dev.azdanov.corebanking.shared.exception.NotFoundException;
 import dev.azdanov.corebanking.shared.money.MoneyFactory;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 
 @Repository
@@ -51,10 +51,7 @@ public class AccountRepositoryAdapter implements AccountRepository {
         }
 
         var balances = accountMapper.findBalancesByAccountId(accountId.value());
-        var currencies = new LinkedHashSet<String>();
-        for (var balance : balances) {
-            currencies.add(balance.currency());
-        }
+        var currencies = balances.stream().map(BalanceRow::currency).toList();
 
         var account = new Account(
             new AccountId(accountRow.id()),
