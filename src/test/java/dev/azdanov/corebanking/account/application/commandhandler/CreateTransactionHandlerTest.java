@@ -60,7 +60,7 @@ class CreateTransactionHandlerTest {
             .isInstanceOf(InvalidInputException.class)
             .hasMessage("Invalid direction: value is required");
 
-        verify(accountRepository, never()).findByIdWithBalances(any());
+        verify(accountRepository, never()).findByIdWithBalancesForUpdate(any());
         verify(transactionRepository, never()).post(any());
     }
 
@@ -78,7 +78,7 @@ class CreateTransactionHandlerTest {
             .isInstanceOf(InvalidInputException.class)
             .hasMessage("Invalid direction: value is required");
 
-        verify(accountRepository, never()).findByIdWithBalances(any());
+        verify(accountRepository, never()).findByIdWithBalancesForUpdate(any());
         verify(transactionRepository, never()).post(any());
     }
 
@@ -96,7 +96,7 @@ class CreateTransactionHandlerTest {
             .isInstanceOf(InvalidInputException.class)
             .hasMessage("Description missing");
 
-        verify(accountRepository, never()).findByIdWithBalances(any());
+        verify(accountRepository, never()).findByIdWithBalancesForUpdate(any());
         verify(transactionRepository, never()).post(any());
     }
 
@@ -114,7 +114,7 @@ class CreateTransactionHandlerTest {
             .isInstanceOf(InvalidInputException.class)
             .hasMessage("Description missing");
 
-        verify(accountRepository, never()).findByIdWithBalances(any());
+        verify(accountRepository, never()).findByIdWithBalancesForUpdate(any());
         verify(transactionRepository, never()).post(any());
     }
 
@@ -132,7 +132,7 @@ class CreateTransactionHandlerTest {
             .isInstanceOf(InvalidInputException.class)
             .hasMessage("Invalid amount: value cannot be negative");
 
-        verify(accountRepository, never()).findByIdWithBalances(any());
+        verify(accountRepository, never()).findByIdWithBalancesForUpdate(any());
         verify(transactionRepository, never()).post(any());
     }
 
@@ -151,7 +151,7 @@ class CreateTransactionHandlerTest {
             .hasMessage("Invalid direction: SIDEWAYS")
             .hasCauseInstanceOf(IllegalArgumentException.class);
 
-        verify(accountRepository, never()).findByIdWithBalances(any());
+        verify(accountRepository, never()).findByIdWithBalancesForUpdate(any());
         verify(transactionRepository, never()).post(any());
     }
 
@@ -168,7 +168,7 @@ class CreateTransactionHandlerTest {
         Account account = createAccountWithBalance(new BigDecimal("500.00"));
         AccountId accountId = account.id();
 
-        when(accountRepository.findByIdWithBalances(accountId))
+        when(accountRepository.findByIdWithBalancesForUpdate(accountId))
             .thenReturn(account);
 
         var command = new CreateTransactionCommand(
@@ -197,7 +197,7 @@ class CreateTransactionHandlerTest {
         Account account = createAccountWithBalance(new BigDecimal("500.00"));
         AccountId accountId = account.id();
 
-        when(accountRepository.findByIdWithBalances(accountId))
+        when(accountRepository.findByIdWithBalancesForUpdate(accountId))
             .thenReturn(account);
 
         var command = new CreateTransactionCommand(
@@ -224,7 +224,7 @@ class CreateTransactionHandlerTest {
     void shouldRejectOutTransactionWhenInsufficientFunds() {
         Account account = createAccountWithBalance(new BigDecimal("500.00"));
 
-        when(accountRepository.findByIdWithBalances(any()))
+        when(accountRepository.findByIdWithBalancesForUpdate(any()))
             .thenReturn(account);
 
         var command = new CreateTransactionCommand(
@@ -245,7 +245,7 @@ class CreateTransactionHandlerTest {
 
     @Test
     void shouldPropagateAccountNotFoundException() {
-        when(accountRepository.findByIdWithBalances(any()))
+        when(accountRepository.findByIdWithBalancesForUpdate(any()))
             .thenThrow(new RuntimeException("Account not found"));
 
         var command = new CreateTransactionCommand(

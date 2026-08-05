@@ -9,6 +9,7 @@ import dev.azdanov.corebanking.account.domain.account.TransactionId;
 import dev.azdanov.corebanking.account.domain.repository.AccountRepository;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.AccountMapper;
 import dev.azdanov.corebanking.account.infrastructure.persistence.mapper.TransactionMapper;
+import dev.azdanov.corebanking.account.infrastructure.persistence.model.AccountRow;
 import dev.azdanov.corebanking.account.infrastructure.persistence.model.BalanceRow;
 import dev.azdanov.corebanking.shared.exception.NotFoundException;
 import dev.azdanov.corebanking.shared.money.MoneyFactory;
@@ -49,8 +50,19 @@ public class AccountRepositoryAdapter implements AccountRepository {
         if (accountRow == null) {
             throw new NotFoundException("Account not found: " + accountId.value());
         }
+        return toAccount(accountRow, accountMapper.findBalancesByAccountId(accountId.value()));
+    }
 
-        var balances = accountMapper.findBalancesByAccountId(accountId.value());
+    @Override
+    public Account findByIdWithBalancesForUpdate(AccountId accountId) {
+        var accountRow = accountMapper.findById(accountId.value());
+        if (accountRow == null) {
+            throw new NotFoundException("Account not found: " + accountId.value());
+        }
+        return toAccount(accountRow, accountMapper.findBalancesByAccountIdForUpdate(accountId.value()));
+    }
+
+    private Account toAccount(AccountRow accountRow, List<BalanceRow> balances) {
         var currencies = balances.stream().map(BalanceRow::currency).toList();
 
         var account = new Account(

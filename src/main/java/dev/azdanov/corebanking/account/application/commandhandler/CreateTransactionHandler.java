@@ -53,7 +53,7 @@ public class CreateTransactionHandler {
             throw new InvalidInputException("Invalid direction: " + command.direction(), e);
         }
 
-        var account = accountRepository.findByIdWithBalances(new AccountId(command.accountId()));
+        var account = accountRepository.findByIdWithBalancesForUpdate(new AccountId(command.accountId()));
 
         var transaction = account.post(
             direction,

@@ -11,5 +11,11 @@ public interface AccountRepository {
 
     Account findByIdWithBalances(AccountId accountId);
 
+    /**
+     * Loads the account and locks its balance rows for the current transaction,
+     * serializing concurrent writes so balance computations never see stale reads.
+     */
+    Account findByIdWithBalancesForUpdate(AccountId accountId);
+
     List<Transaction> findTransactions(AccountId accountId);
 }

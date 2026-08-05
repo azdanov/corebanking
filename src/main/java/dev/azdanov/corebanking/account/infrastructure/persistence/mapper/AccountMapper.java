@@ -49,4 +49,16 @@ public interface AccountMapper {
         ORDER BY currency
         """)
     List<BalanceRow> findBalancesByAccountId(@Param("accountId") UUID accountId);
+
+    @Arg(column = "account_id", javaType = UUID.class)
+    @Arg(column = "currency", javaType = String.class)
+    @Arg(column = "available_amount", javaType = BigDecimal.class)
+    @Select("""
+        SELECT account_id, currency, available_amount
+        FROM balances
+        WHERE account_id = #{accountId}
+        ORDER BY currency
+        FOR UPDATE
+        """)
+    List<BalanceRow> findBalancesByAccountIdForUpdate(@Param("accountId") UUID accountId);
 }
